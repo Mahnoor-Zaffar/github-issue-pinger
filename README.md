@@ -142,6 +142,7 @@ Or from the SwiftBar dropdown: **Open full list (browser)** (if the script has b
 - `GITHUB_ISSUE_CONFIG` — path to config JSON
 - `GITHUB_ISSUE_STATE` — path to state JSON
 - `GITHUB_ISSUE_HTML` — path to HTML report
+- `GITHUB_USERNAME` — overrides `github_username` in config
 - `GITHUB_TOKEN` — overrides `github_token` in config (recommended for security)
 
 ---

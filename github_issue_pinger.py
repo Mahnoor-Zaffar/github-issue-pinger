@@ -198,7 +198,11 @@ def main() -> None:
     state = load_json(STATE_PATH, {"last_seen": {}})
 
     token = os.getenv("GITHUB_TOKEN") or cfg.get("github_token") or None
-    username = cfg.get("github_username") or ""
+    username = (
+        os.getenv("GITHUB_USERNAME")
+        or cfg.get("github_username")
+        or ""
+    )
     include_prs = bool(cfg.get("include_prs", False))
     max_issues = int(cfg.get("max_issues_per_repo", 10))
     max_repos = int(cfg.get("max_repos", 50))
@@ -209,8 +213,10 @@ def main() -> None:
     now_epoch = int(time.time())
     cutoff_epoch = now_epoch - (days_back * 24 * 60 * 60)
 
-    if not username or username == "your_github_username":
-        raise SystemExit("Set github_username in github_issue_config.json")
+    if not username or username in ("your_github_username", "${GITHUB_USERNAME}"):
+        raise SystemExit(
+            "Set github_username in github_issue_config.json or GITHUB_USERNAME env var"
+        )
 
     try:
         repos = list_forked_repos(username, token, max_repos)
