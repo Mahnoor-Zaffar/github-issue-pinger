@@ -1,0 +1,12 @@
+{
+  "github_username": "${GITHUB_USERNAME}",
+  "github_token": "",
+  "include_prs": false,
+  "max_issues_per_repo": 10,
+  "max_repos": 50,
+  "days_back": 7,
+  "results_per_page": 100,
+  "max_pages_per_repo": 3,
+  "use_parent_issues": true,
+  "max_display": 200
+}
