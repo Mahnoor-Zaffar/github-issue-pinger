@@ -1,6 +1,6 @@
 {
-  "github_username": "${GITHUB_USERNAME}",
-  "github_token": "",
+  "github_username": "sabasiddique1",
+  "github_token": "${YOUR_GITHUB_TOKEN_HERE}",
   "include_prs": false,
   "max_issues_per_repo": 10,
   "max_repos": 50,

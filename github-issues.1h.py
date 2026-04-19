@@ -4,12 +4,32 @@ import os
 import subprocess
 from datetime import datetime
 
+# Resolve BASE: when run via SwiftBar symlink, use realpath; fallback to project path
+_plugin_path = os.environ.get("SWIFTBAR_PLUGIN_PATH") or __file__
+_base_candidates = [
+    os.path.dirname(os.path.realpath(_plugin_path)),
+    os.path.expanduser("~/Desktop/Projects/github_issue_pinger"),
+]
+BASE = next((b for b in _base_candidates if os.path.isfile(os.path.join(b, "github_issue_pinger.py"))), _base_candidates[0])
+PYTHON = os.path.join(BASE, ".venv/bin/python3")
+SCRIPT = os.path.join(BASE, "github_issue_pinger.py")
+SUBPROCESS_TIMEOUT_SECONDS = 75
 
-PYTHON = os.path.expanduser("~/Desktop/job_posting/.venv/bin/python3")
-SCRIPT = os.path.expanduser("~/Desktop/job_posting/github_issue_pinger.py")
-
-out = subprocess.check_output([PYTHON, SCRIPT]).decode("utf-8")
-data = json.loads(out)
+try:
+    out = subprocess.check_output([PYTHON, SCRIPT], timeout=SUBPROCESS_TIMEOUT_SECONDS).decode("utf-8")
+    data = json.loads(out)
+except subprocess.TimeoutExpired:
+    data = {
+        "error": (
+            f"Issue fetch exceeded {SUBPROCESS_TIMEOUT_SECONDS}s. "
+            "Reduce max_repos/max_pages_per_repo or set max_runtime_seconds in github_issue_config.json."
+        ),
+        "total_recent": 0,
+        "items": [],
+        "days_back": 7,
+    }
+except (subprocess.CalledProcessError, FileNotFoundError, json.JSONDecodeError) as e:
+    data = {"error": str(e), "total_recent": 0, "items": [], "days_back": 7}
 
 
 def short_date(iso_str: str) -> str:
@@ -27,15 +47,22 @@ def short_title(text: str, limit: int = 80) -> str:
 
 total = data.get("total_recent", 0)
 days_back = data.get("days_back", 7)
+report_path = data.get("html_report_path") or os.path.join(BASE, "github_issues_report.html")
+report_path = os.path.abspath(os.path.expanduser(report_path))
+
 print(f"🪼 OSS Issues: {total} (last {days_back}d) | refresh=true")
+print("---")
+print(f"Open full list (browser) | bash=/usr/bin/open param1={report_path} terminal=false")
 print("---")
 if data.get("error"):
     print(f"Error: {data['error']}")
     print("---")
-    print("Open config | open=/Users/saba/Desktop/job_posting/github_issue_config.json")
-    print("Run now | bash=/Users/saba/Desktop/job_posting/.venv/bin/python3 param1=/Users/saba/Desktop/job_posting/github_issue_pinger.py terminal=true refresh=true")
+    print("Open config | open=" + os.path.join(BASE, "github_issue_config.json"))
+    print("Run now | bash=" + PYTHON + " param1=" + SCRIPT + " terminal=true refresh=true")
 elif not data.get("items"):
     print(f"No issues opened in last {days_back} days")
+    if data.get("warning"):
+        print(f"Warning: {short_title(str(data['warning']), 120)}")
     print("---")
     print("Tip: increase days_back or max_pages_per_repo")
 else:
@@ -43,10 +70,19 @@ else:
     counts = data.get("per_repo_counts", {})
     max_display = data.get("max_display", 200)
 
-    print("By repo")
+    # Compact repo summary: "pandas (7) • sklearn (2) • meteor (2)" in 1-2 lines
+    repo_parts = []
     for repo, count in sorted(counts.items(), key=lambda x: x[1], reverse=True):
         if count > 0:
-            print(f"{repo}: {count} | href=https://github.com/{repo}")
+            short = repo.split("/")[-1] if "/" in repo else repo
+            repo_parts.append(f"{short} ({count})")
+    if repo_parts:
+        compact = " • ".join(repo_parts[:10])  # max 10 repos in summary
+        if len(repo_parts) > 10:
+            compact += f" +{len(repo_parts) - 10} more"
+        print(f"Repos: {compact} | bash=/usr/bin/open param1={report_path} terminal=false")
+    if data.get("warning"):
+        print(f"Warning: {short_title(str(data['warning']), 120)}")
     print("---")
 
     print("Recent issues (last week)")
@@ -56,9 +92,6 @@ else:
         line = f"{date} • {item.get('repo')} #{item.get('number')} {title}"
         print(f"{line} | href={item.get('url')}")
 print("---")
-print("Open config | open=/Users/saba/Desktop/job_posting/github_issue_config.json")
-print("Run now | bash=/Users/saba/Desktop/job_posting/.venv/bin/python3 param1=/Users/saba/Desktop/job_posting/github_issue_pinger.py terminal=true refresh=true")
-report_path = data.get("html_report_path")
-if report_path:
-    print(f"Open full list (browser) | open={report_path}")
+print("Open config | open=" + os.path.join(BASE, "github_issue_config.json"))
+print("Run now | bash=" + PYTHON + " param1=" + SCRIPT + " terminal=true refresh=true")
 print("Open plugin folder | open=/Users/saba/Library/Application Support/SwiftBar/Plugins")

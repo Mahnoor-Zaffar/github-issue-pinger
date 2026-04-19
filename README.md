@@ -51,6 +51,8 @@ Copy or edit `github_issue_config.json`:
   "days_back": 7,
   "results_per_page": 100,
   "max_pages_per_repo": 3,
+  "request_timeout_seconds": 15,
+  "max_runtime_seconds": 50,
   "use_parent_issues": true,
   "max_display": 200
 }
@@ -132,6 +134,8 @@ Or from the SwiftBar dropdown: **Open full list (browser)** (if the script has b
 | `days_back` | `7` | Only issues created in last N days |
 | `results_per_page` | `100` | GitHub API per_page |
 | `max_pages_per_repo` | `3` | Pages per repo for issue fetch |
+| `request_timeout_seconds` | `15` | Per-request timeout for GitHub API calls |
+| `max_runtime_seconds` | `50` | Soft overall runtime budget; returns partial results when reached |
 | `use_parent_issues` | `true` | Use parent repo for issues (forks) |
 | `max_display` | `200` | Max issues in dropdown/HTML |
 
@@ -163,4 +167,3 @@ MIT (or your choice — add a LICENSE file).
 ## Contributing
 
 PRs and issues welcome: [github.com/sabasiddique1/github-issue-pinger](https://github.com/sabasiddique1/github-issue-pinger).
-

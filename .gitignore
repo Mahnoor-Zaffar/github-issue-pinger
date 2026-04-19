@@ -1,0 +1,3 @@
+# Config contains token - do not commit
+github_issue_config.json
+.env
