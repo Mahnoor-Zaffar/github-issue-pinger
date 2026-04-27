@@ -1,12 +1,17 @@
 {
-  "github_username": "sabasiddique1",
-  "github_token": "${YOUR_GITHUB_TOKEN_HERE}",
+  "github_username": "username",
   "include_prs": false,
   "max_issues_per_repo": 10,
   "max_repos": 50,
   "days_back": 7,
   "results_per_page": 100,
   "max_pages_per_repo": 3,
+  "connect_timeout_seconds": 5,
+  "request_timeout_seconds": 15,
+  "request_retries": 3,
+  "retry_backoff_seconds": 0.5,
+  "max_runtime_seconds": 50,
   "use_parent_issues": true,
-  "max_display": 200
+  "max_display": 200,
+  "refresh_interval_minutes": 60
 }

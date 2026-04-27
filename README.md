@@ -1,169 +1,168 @@
 # GitHub Issue Pinger
 
-Track **open issues** from repos you've **forked** on GitHub — filtered by the last N days. Optional **SwiftBar** menu-bar widget + **HTML report** for the full list in the browser.
+GitHub Issue Pinger now ships as a **Tauri + React macOS menu bar app** with the original **Python script** and **SwiftBar plugin** still available.
 
-**Repo:** [github.com/sabasiddique1/github-issue-pinger](https://github.com/sabasiddique1/github-issue-pinger)
+It tracks **open issues** from repositories you have **forked** on GitHub, prefers the **upstream repo** for issue discovery, writes an **HTML report**, and keeps a locally cached result so the menu bar app stays responsive while idle.
 
----
+## What is in this repo
 
-## What it does
+- `github_issue_pinger.py`: standalone Python fetcher that prints JSON and writes the HTML report.
+- `github-issues.1h.py`: optional SwiftBar plugin wrapper around the Python fetcher.
+- `src/`: React UI used by the Tauri app window.
+- `src-tauri/`: Tauri desktop shell, tray integration, scheduling, caching, and Python bridge.
+- `github_issue_config.json`: checked-in sample config with no token.
+- `.env.example`: development-only secret template.
 
-- Fetches your **forked** repos via GitHub API
-- By default uses **parent (upstream)** repos for issues (where issues actually live)
-- Filters issues **opened in the last N days** (configurable, default 7)
-- Outputs JSON; optional **HTML report** and **SwiftBar** dropdown
+## Security and config
 
-No scraping — GitHub REST API only.
+Secrets are no longer stored in the checked-in JSON config.
 
----
-
-## Requirements
-
-- **Python 3.9+**
-- **requests** (`pip install requests`)
-- (Optional) **SwiftBar** on macOS for menu-bar widget — [SwiftBar](https://github.com/swiftbar/SwiftBar)
-
----
-
-## Quick start
-
-### 1. Clone & venv
+1. Copy the env template:
 
 ```bash
-git clone git@github.com:sabasiddique1/github-issue-pinger.git
-cd github-issue-pinger
-python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install requests
+cp .env.example .env
 ```
 
-### 2. Config
-
-Copy or edit `github_issue_config.json`:
-
-```json
-{
-  "github_username": "YOUR_GITHUB_USERNAME",
-  "github_token": "",
-  "include_prs": false,
-  "max_issues_per_repo": 10,
-  "max_repos": 50,
-  "days_back": 7,
-  "results_per_page": 100,
-  "max_pages_per_repo": 3,
-  "request_timeout_seconds": 15,
-  "max_runtime_seconds": 50,
-  "use_parent_issues": true,
-  "max_display": 200
-}
-```
-
-- **github_username** — Your GitHub username (required).
-- **github_token** — Personal access token (recommended; avoids low rate limits). Create at GitHub → Settings → Developer settings → Personal access tokens. Scope: `public_repo` (or `repo` for private).
-- **days_back** — Issues opened in the last N days (default 7).
-- **use_parent_issues** — `true` = use parent/upstream repo for issues (recommended for forks).
-- **max_display** — Max issues shown in SwiftBar dropdown and HTML report.
-
-### 3. Run
+2. Fill in:
 
 ```bash
-python3 github_issue_pinger.py
+GITHUB_USERNAME=your-github-username
+GITHUB_TOKEN=your-github-token
 ```
 
-Prints JSON (counts, per-repo breakdown, issue list). Also writes `github_issues_report.html` in the project folder.
+3. Keep `github_issue_config.json` for non-secret defaults only. The Tauri app copies this file into the app data directory on first run and the Python script still accepts `GITHUB_ISSUE_CONFIG` if you want a custom path.
 
----
+Environment variables used by the fetcher:
 
-## Outputs
+- `GITHUB_USERNAME`
+- `GITHUB_TOKEN`
+- `GITHUB_ISSUE_CONFIG`
+- `GITHUB_ISSUE_STATE`
+- `GITHUB_ISSUE_HTML`
+- `PYTHON_BIN`
 
-| Output | Description |
-|--------|-------------|
-| **stdout** | JSON: `total_recent`, `per_repo_counts`, `items`, `html_report_path` |
-| **github_issues_report.html** | Full list: date, repo, title; each row links to the issue |
-| **github_issue_state.json** | Internal state (last-seen timestamps); safe to delete to reset |
+## Install dependencies
 
----
+### Python
 
-## Optional: SwiftBar (macOS menu bar)
-
-1. Install [SwiftBar](https://github.com/swiftbar/SwiftBar) (e.g. `brew install --cask swiftbar`).
-2. **Edit** `github-issues.1h.py`: set `PYTHON` and `SCRIPT` to your clone path and venv:
-
-   ```python
-   BASE = "/path/to/your/github-issue-pinger"  # your clone path
-   PYTHON = os.path.join(BASE, ".venv/bin/python3")
-   SCRIPT = os.path.join(BASE, "github_issue_pinger.py")
-   ```
-
-   Replace `/path/to/your/github-issue-pinger` with the real path (e.g. `~/github-issue-pinger`).
-
-3. Copy plugin into SwiftBar:
-
-   ```bash
-   cp github-issues.1h.py "$HOME/Library/Application Support/SwiftBar/Plugins/"
-   chmod +x "$HOME/Library/Application Support/SwiftBar/Plugins/github-issues.1h.py"
-   ```
-
-4. Open SwiftBar and refresh: `open "swiftbar://refresh"`.
-
-Menu bar shows e.g. **OSS Issues: 42 (last 7d)**. Click for dropdown: by-repo counts, recent issues (clickable), **Open full list (browser)** to open the HTML report.
-
----
-
-## Optional: Open report in browser
-
-After running the script:
+Use a Homebrew Python on macOS. The Apple Command Line Tools Python is commonly linked against LibreSSL, which causes `urllib3` warnings and is not the intended runtime for this project.
 
 ```bash
-open github_issues_report.html
+brew install python@3.11
+/opt/homebrew/bin/python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install requests
 ```
 
-Or from the SwiftBar dropdown: **Open full list (browser)** (if the script has been run at least once).
+### Node.js
 
----
+Install a current Node.js release, then install frontend and Tauri JS dependencies:
 
-## Config reference
+```bash
+npm install
+```
 
-| Key | Default | Description |
-|-----|---------|-------------|
-| `github_username` | — | Your GitHub username |
-| `github_token` | `""` | PAT (env `GITHUB_TOKEN` overrides) |
-| `include_prs` | `false` | Include pull requests as issues |
-| `max_issues_per_repo` | `10` | Legacy; pagination uses below |
-| `max_repos` | `50` | Max forked repos to fetch |
-| `days_back` | `7` | Only issues created in last N days |
-| `results_per_page` | `100` | GitHub API per_page |
-| `max_pages_per_repo` | `3` | Pages per repo for issue fetch |
-| `request_timeout_seconds` | `15` | Per-request timeout for GitHub API calls |
-| `max_runtime_seconds` | `50` | Soft overall runtime budget; returns partial results when reached |
-| `use_parent_issues` | `true` | Use parent repo for issues (forks) |
-| `max_display` | `200` | Max issues in dropdown/HTML |
+### Rust
 
----
+Tauri requires the Rust toolchain:
 
-## Environment overrides
+```bash
+curl https://sh.rustup.rs -sSf | sh
+rustup default stable
+```
 
-- `GITHUB_ISSUE_CONFIG` — path to config JSON
-- `GITHUB_ISSUE_STATE` — path to state JSON
-- `GITHUB_ISSUE_HTML` — path to HTML report
-- `GITHUB_USERNAME` — overrides `github_username` in config
-- `GITHUB_TOKEN` — overrides `github_token` in config (recommended for security)
+## Run in dev mode
 
----
+### Standalone Python fetcher
 
-## Security
+This is still the source of truth for the data fetch and remains fully usable on its own:
 
-- Do **not** commit `github_issue_config.json` if it contains a token. Add it to `.gitignore` or use `GITHUB_TOKEN` only.
-- Keep tokens with minimal scope (`public_repo` or `repo`).
+```bash
+source .venv/bin/activate
+python github_issue_pinger.py
+```
 
----
+The script prints JSON to stdout and writes `github_issues_report.html`.
 
-## License
+### React frontend only
 
-MIT (or your choice — add a LICENSE file).
+```bash
+npm run dev
+```
 
----
+### Full Tauri menu bar app
 
-## Contributing
+```bash
+npm run tauri:dev
+```
 
-PRs and issues welcome: [github.com/sabasiddique1/github-issue-pinger](https://github.com/sabasiddique1/github-issue-pinger).
+## Test menu bar changes
+
+Use `npm run tauri:dev`, then validate:
+
+1. The tray icon appears with a title next to it.
+2. The tray menu contains `Open`, `Refresh`, `Open Report`, and `Quit`.
+3. The app fetches once on startup.
+4. Manual `Refresh` triggers a fetch but repeated clicks do not create overlapping jobs.
+5. Closing the window hides it instead of quitting the app.
+6. `Open Report` launches the generated HTML report.
+7. Idle CPU stays effectively at zero after the scheduled fetch settles.
+
+Note: in development you may still see normal app-window behavior from the debugger/toolchain. The dock icon is intentionally hidden only for non-debug macOS builds.
+
+## Build the production app
+
+```bash
+npm run tauri:build
+```
+
+Expected output location:
+
+- `src-tauri/target/release/bundle/`
+
+## Tauri app behavior
+
+- Default refresh interval: `60` minutes
+- Minimum enforced refresh interval: `30` minutes
+- Fetch triggers:
+  - startup
+  - manual refresh
+  - scheduled interval
+- No aggressive polling loop
+- No overlapping fetch jobs
+- Cached latest result written locally
+- Tray updates from cached/live state
+- Dock icon hidden on macOS production builds
+
+The Tauri shell keeps app state in the app-local data directory. On macOS this resolves under:
+
+- `~/Library/Application Support/com.sabasiddique.github-issue-pinger/`
+
+That directory holds the working config copy, fetch cache, state JSON, and generated HTML report used by the desktop app.
+
+## SwiftBar support
+
+The SwiftBar plugin is still available and now respects `PYTHON_BIN` if you want to point it at a non-default interpreter:
+
+```bash
+PYTHON_BIN=/absolute/path/to/python3
+```
+
+If `PYTHON_BIN` is not set, the plugin prefers `.venv/bin/python3` and falls back to `python3`.
+
+## Notes on generated files
+
+The repo now ignores local/generated artifacts such as:
+
+- `.env`
+- `.venv/`
+- `__pycache__/`
+- `.DS_Store`
+- `node_modules/`
+- `dist/`
+- `src-tauri/target/`
+- `github_issue_state.json`
+- `github_issues_report.html`
+
+Do not commit tokens or generated local state.
