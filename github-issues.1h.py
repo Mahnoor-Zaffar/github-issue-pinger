@@ -2,16 +2,22 @@
 import json
 import os
 import subprocess
+import warnings
+warnings.filterwarnings("ignore")
 from datetime import datetime
+import sys
+sys.stderr = open(os.devnull, 'w')
+os.environ.setdefault("GITHUB_USERNAME", "sabasiddique1")
 
 # Resolve BASE: when run via SwiftBar symlink, use realpath; fallback to project path
 _plugin_path = os.environ.get("SWIFTBAR_PLUGIN_PATH") or __file__
 _base_candidates = [
     os.path.dirname(os.path.realpath(_plugin_path)),
-    os.path.expanduser("~/Desktop/Projects/github_issue_pinger"),
+    os.path.expanduser("~/Desktop/my_Gems/github-issue-pinger"),
 ]
 BASE = next((b for b in _base_candidates if os.path.isfile(os.path.join(b, "github_issue_pinger.py"))), _base_candidates[0])
-PYTHON = os.path.join(BASE, ".venv/bin/python3")
+_venv_python = os.path.join(BASE, ".venv/bin/python3")
+PYTHON = os.environ.get("PYTHON_BIN") or (_venv_python if os.path.isfile(_venv_python) else "python3")
 SCRIPT = os.path.join(BASE, "github_issue_pinger.py")
 SUBPROCESS_TIMEOUT_SECONDS = 75
 
@@ -95,3 +101,7 @@ print("---")
 print("Open config | open=" + os.path.join(BASE, "github_issue_config.json"))
 print("Run now | bash=" + PYTHON + " param1=" + SCRIPT + " terminal=true refresh=true")
 print("Open plugin folder | open=/Users/saba/Library/Application Support/SwiftBar/Plugins")
+
+
+# // killall SwiftBar && open -a SwiftBar
+# // killall SwiftBar
