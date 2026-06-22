@@ -63,8 +63,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "github_token": "",
     "include_prs": False,
     "max_issues_per_repo": 10,
-    "max_repos": 50,
-    "days_back": 7,
+    "max_repos": 20,
+    "days_back": 3,
     "results_per_page": 100,
     "max_pages_per_repo": 3,
     "connect_timeout_seconds": 5,
@@ -506,31 +506,6 @@ def resolve_issue_repo(
     if parent and parent.get("full_name"):
         return parent["full_name"]
     return fork_full_name
-
-
-def fetch_open_issues(
-    session: requests.Session,
-    repo_full_name: str,
-    include_prs: bool,
-    max_issues: int,
-    connect_timeout_seconds: int,
-    request_timeout_seconds: int,
-    deadline_monotonic: Optional[float],
-) -> List[Dict[str, Any]]:
-    url = (
-        f"https://api.github.com/repos/{repo_full_name}/issues"
-        f"?state=open&per_page={max_issues}&sort=created&direction=desc"
-    )
-    items = gh_get(
-        session,
-        url,
-        connect_timeout_seconds,
-        request_timeout_seconds,
-        deadline_monotonic,
-    )
-    if include_prs:
-        return items
-    return [it for it in items if "pull_request" not in it]
 
 
 def fetch_recent_issues(
