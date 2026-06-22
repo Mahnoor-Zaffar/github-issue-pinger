@@ -227,10 +227,12 @@ A daily workflow runs at **08:00 UTC** and uploads the HTML report plus JSON sum
 
 Configure these under **Settings → Secrets and variables → Actions**:
 
-| Secret | Value |
-|--------|-------|
-| `GITHUB_USERNAME` | GitHub account whose forks are scanned |
-| `GITHUB_TOKEN` | Personal access token (`public_repo` scope) |
+| Secret name | Value |
+|-------------|-------|
+| `USERNAME` | GitHub account whose forks are scanned (e.g. `Mahnoor-Zaffar`) |
+| `TOKEN` | Personal access token (`public_repo` scope) |
+
+The workflow maps these to `GITHUB_USERNAME` and `GITHUB_TOKEN` for the Python fetcher. Local `.env` still uses the `GITHUB_*` variable names.
 
 Trigger manually from the **Actions** tab via **Run workflow**, or wait for the daily schedule.
 
