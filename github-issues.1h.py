@@ -19,6 +19,7 @@ BASE = next((b for b in _base_candidates if os.path.isfile(os.path.join(b, "gith
 _venv_python = os.path.join(BASE, ".venv/bin/python3")
 PYTHON = os.environ.get("PYTHON_BIN") or (_venv_python if os.path.isfile(_venv_python) else "python3")
 SCRIPT = os.path.join(BASE, "github_issue_pinger.py")
+SWIFTBAR_PLUGINS_DIR = os.path.expanduser("~/Library/Application Support/SwiftBar/Plugins")
 SUBPROCESS_TIMEOUT_SECONDS = 75
 
 try:
@@ -96,7 +97,7 @@ else:
         print(f"Warning: {short_title(str(data['warning']), 120)}")
     print("---")
 
-    print("Recent issues (last week)")
+    print("Recent issues (last {} days)".format(days_back))
     for item in items[:max_display]:
         date = short_date(item.get("created_at", ""))
         title = short_title(item.get("title", ""))
@@ -107,7 +108,7 @@ print("---")
 print("Open .env | open=" + os.path.join(BASE, ".env"))
 print("Open config | open=" + os.path.join(BASE, "github_issue_config.json"))
 print("Run now | bash=" + PYTHON + " param1=" + SCRIPT + " terminal=true refresh=true")
-print("Open plugin folder | open=/Users/saba/Library/Application Support/SwiftBar/Plugins")
+print("Open plugin folder | open=" + SWIFTBAR_PLUGINS_DIR)
 
 
 # // killall SwiftBar && open -a SwiftBar

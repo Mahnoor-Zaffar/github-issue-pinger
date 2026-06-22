@@ -221,7 +221,9 @@ github-issue-pinger/
 
 ## Scheduled fetch (GitHub Actions)
 
-A daily workflow runs at **08:00 UTC** and uploads the HTML report plus JSON summary as workflow artifacts.
+A daily workflow runs at **08:00 UTC** and uploads the HTML report, JSON summary, and state file as workflow artifacts.
+
+Issue `last_seen` state is cached between runs via GitHub Actions cache, so `total_new` reflects issues since the previous scheduled fetch in CI.
 
 ### Repository secrets required
 
